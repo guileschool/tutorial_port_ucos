@@ -173,6 +173,8 @@
 .equ	WDT_BASE,				0xea200000
 .equ	INFORM0,				0xE0108400
 .equ	VIC0_ISRADDR,			(0xe4000000+0xf00)
+.equ	VIC1_ISRADDR,			(0xe4100000+0xf00)
+.equ	VIC2_ISRADDR,			(0xe4200000+0xf00)
 .equ	OTHERS,					0x8200
 
 /* 

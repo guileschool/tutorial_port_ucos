@@ -27,12 +27,16 @@ start:
 	
 ;/* Exception Entries */
 	.global ResetEntry
+	.extern Dabort_Handler
+	.extern Pabort_Handler
+	.extern SWI_Handler
+	.extern Undef_Handler
 
 ResetEntry:		B       ResetHandler
-UndefEntry:		B       UndefHandler
-SwiEntry:			B       SWIHandler
-IAbortEntry:	B       PAbortHandler
-DAbortEntry:	B       DAbortHandler
+UndefEntry:		B       Undef_Handler					@@UndefHandler
+SwiEntry:			B       SWI_Handler						@@SWIHandler
+IAbortEntry:	B       Pabort_Handler				@@PAbortHandler
+DAbortEntry:	B       Dabort_Handler				@@DAbortHandler
         			B       .
 IrqEntry:     B       IRQHandler
 FiqEntry:			B       FIQHandler
@@ -269,9 +273,29 @@ DAbortHandler:
 	b .
 
 IRQHandler:
-	mov		r0, #'i'
-	bl		uart_putc
-	b .
+	sub lr, lr, #4
+	stmfd sp!,{r0-r12,lr}
+
+	ldr		r0, =VIC0_ISRADDR
+	cmp		r0,#0
+	beq		1f
+	ldr		lr,=end
+	ldr		pc, [r0, #0]
+1:
+	ldr		r0, =VIC1_ISRADDR
+	cmp		r0,#0
+	beq		2f
+	ldr		lr,=end
+	ldr		pc, [r0, #0]
+2:
+	ldr		r0, =VIC2_ISRADDR
+	cmp		r0,#0
+	beq		end
+	ldr		lr,=end
+	ldr		pc, [r0, #0]
+
+end:
+	ldmfd sp!,{r0-r12,pc}^
 
 FIQHandler:
 	mov		r0, #'f'

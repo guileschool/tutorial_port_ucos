@@ -30,7 +30,10 @@ OBJDUMP 	= $(TOOLDIR)/bin/$(TARGET)-objdump
     
 BSPSRC 		=	$(BSPDIR)/uartdrv.c\
 						$(BSPDIR)/clkcon.c\
-						$(BSPDIR)/syscall.c
+						$(BSPDIR)/syscall.c\
+						$(BSPDIR)/timer.c\
+						$(BSPDIR)/libc.c\
+						$(BSPDIR)/Exception.c
 
 BSPASRC 		=	$(BSPDIR)/common.S\
               $(BSPDIR)/cp15a.S\
