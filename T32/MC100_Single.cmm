@@ -1,0 +1,354 @@
+;=================================================================================
+; SMDKC100 CMM File : <SMDKC100_WCE_WMO.cmm>
+; - Loading the binary and information files of S5PC100 Win CE/Mobile images.
+;   * NB0 files : NK / Eboot / IPL / Steploader / NBL1 / NBL2
+; - Attach the system and load informatioin files at Win CE/Mobile running system.
+;   * EXE files : NK / FLASH / Eboot / IPL / Steploader / NBL1 / NBL2
+; - Burning the SMDK UMON images to NAND memory.
+; - Loading or Attach the Firmware binary image
+;
+;                            2008.10.27 / by AP Dev.System LSI.Samsung Electronics
+;=================================================================================
+;do SMDKC100_WCE_WMO_Header.cmm
+
+WinClear
+sYmbol.RESet
+SYStem.RESet
+TASK.RESet
+Break.Delete
+MAP.RESet
+MMU.RESet
+Break.Delete
+
+;*********************************************************************************
+; Define Environment Variables
+;*********************************************************************************
+; [ Definition of Operation Mode]
+&LOAD_BIN='L'
+&ATTACH='A'
+&BURN_UMON='U'
+&FIRMWARE='W'
+
+; [ Definition of Image Type ]
+&NK='N'
+&FLASH='N'      ; NK and Flash images are same when loading.
+&EBOOT='E'
+&IPL='I'
+&STEPLDR='S'
+&NBL1='C'
+&NBL2='D'
+
+; [ Definition of System Attributes ]
+&ONE_NAND='a'
+&NAND_N8='b'	; Nand Normal 8bit
+&NAND_A8='c'	; Nand Advanced 8bit
+&NAND_M8='d'	; Nand MLC 8bit
+&ROM='e'
+&SRAM='f'
+
+&S_JTAG=1		; Normal JTAG = 0, Secure JTAG = 1
+&NEED_SYSINIT=0
+
+; [ Definition of Others ]
+&TRUE=(1==1)
+&FALSE=(1==0)
+
+;*********************************************************************************
+; System UP and Setting the basic envirionments.
+;*********************************************************************************
+
+sYmbol.RESet
+MMU.RESet
+SYStem.CPU CORTEXA8
+SYStem.JC 10mhz
+SYStem.Option RB OFF
+SYStem.Option mmu OFF
+SYStem.Option dacr ON
+SYStem.Option enreset OFF
+SYStem.Option trst ON
+SYStem.Option waitreset ON
+
+term.reset
+TrOnchip.Set SWI ON 
+term.method ARMSWI
+ 
+SYStem.MultiCore MEMORYACCESSPORT 0x0
+SYStem.MultiCore DEBUGACCESSPORT 0x1
+SYStem.MultiCore COREBASE	0x80005000  ; ARM core 
+SYStem.MultiCore ETBBASE	0x80001000  ; ETB
+
+SYS.MODE PREPARE	; DAP on in 2008.03 update version
+wait 20.ms
+
+; [ WinCE Awareness Loading ]
+ 
+;TASK.CONFIG wince       ; loads WinCE awareness (wince.t32)
+;MENU.ReProgram wince    ; loads WinCE menu (wince.men)
+
+
+;---------------------------------------------------------------------------------
+; AHB Initialization
+;---------------------------------------------------------------------------------
+IF &S_JTAG==0
+(
+	SYStem.Option enreset off
+	SYStem.Option trst off
+
+	;;; Secure JTAG open          
+	print "Secure JTAG start"
+	d.s AHB:0xF4080024 %LE %LONG 0x00000001	
+	
+	print "Secure JTAG password"
+	d.s AHB:0xF4080020 %LE %LONG 0xc4d6edba
+	d.s AHB:0xF4080020 %LE %LONG 0xaef4136a
+	d.s AHB:0xF4080020 %LE %LONG 0x2c278959
+	d.s AHB:0xF4080020 %LE %LONG 0x11ad221b
+	d.s AHB:0xF4080020 %LE %LONG 0xf8d51722
+	d.s AHB:0xF4080020 %LE %LONG 0xb4ee8a02
+	d.s AHB:0xF4080020 %LE %LONG 0x513ced11
+	d.s AHB:0xF4080020 %LE %LONG 0x316f0d0f
+	d.s AHB:0xF4080020 %LE %LONG 0xee011800
+	d.s AHB:0xF4080020 %LE %LONG 0xb3078f19
+	d.s AHB:0xF4080020 %LE %LONG 0xcc050af3
+	d.s AHB:0xF4080020 %LE %LONG 0x95312f08
+	d.s AHB:0xF4080020 %LE %LONG 0xc9f4937e
+	
+	;;; waiting 80 clocks to complete hashing
+	print "Secure JTAG hash polling"  
+	wait 0.1s
+	
+	print "Secure JTAG finish"
+	d.s AHB:0xF4080024 %LE %LONG 0x00000002
+	
+	print "Status REG=0x" data.long(AHB:0xF4080004)
+	print "Result REG=0x" data.long(AHB:0xF4080008)
+	print "Header Info REG=0x" data.long(AHB:0xF408000C)
+
+	print "Authentication Status REG=0x" data.long(APB:0x80005FB8)  ; must be 0xAA
+;	print "CPU debug Status REG=0x" data.long(APB:0x80005088) 
+	wait 0.1s
+)
+
+; [ Disable Abort/Undefined Exception ]
+TrOnchip.Set DABORT OFF
+TrOnchip.Set PABORT OFF
+TrOnchip.Set UNDEF OFF
+
+&ONENAND_ERASE_BLOCK0=0
+
+; [ SYStemp UP ]
+print "system going up"
+SYStem.Up
+
+;;;;; Erase Block #0 in OneNAND Flash ;;;;; 
+;;; Cation : in order to this script 
+;;;   Open 'Debug' for CD.PEDIT 
+;;;   Execute 'Step' till ONENAND_ERASE_BLOCK0 script 
+;;; 
+IF &ONENAND_ERASE_BLOCK0==1 
+( 
+    Data.set ASD:0xB8000000 %LE %LONG 0x0E		; Unlock command toward OneNAND
+    wait 1000.us
+    Data.set ASD:0xB8000000 %LE %LONG 0x03		; Erase Block No.0 in OneNAND
+    enddo
+)
+
+r.s cpsr (r(cpsr)&0xffffff00)|0xd3
+PER.S C15:0x42F %LE %LONG 0x70000013   				; Peripheral Port Enable
+d.s SD:0xEA200000 %LE %LONG 0x0 				; Disable Watchdog
+
+;enddo
+
+;*********************************************************************************
+; Define Operating Mode and Image Type
+;*********************************************************************************
+; [ Select Operation Mode ]
+; Select one of followings,  
+; :  &LOAD_BIN / &ATTACH / &BURN_UMON / &FIRMWARE
+&RUNNING_MODE=&LOAD_BIN
+
+
+
+; [ Select Image Type ]
+; Select one of followings,  
+; :  &NK / &FLASH / &EBOOT / &IPL / &STEPLDR / &NBL1 / &NBL2
+;   (When your running mode is BURN_UMON or FIRMWARE, following value has to be 0)
+&IMAGE_TYPE=&EBOOT
+
+
+
+; [ Select whether Using Booting-Rom or Not ]
+; If you need to initialize Clock & DRAM, set following value to 1.
+&NEED_SYSINIT=0                  
+;do MC100_sysinit.cmm
+;do MC100_NOR_flash.cmm
+;do MC100_NAND_flash.cmm
+;*********************************************************************************
+;
+; Firmware Operating Mode
+;
+;********************************************************************************* 
+;---------------------------------------------------------------------------------
+; Running Firmware
+;---------------------------------------------------------------------------------
+;IF &RUNNING_MODE==&FIRMWARE   
+;(
+
+
+data.load.elf ..\ucos2_data\mC100Test
+to.s dabort on
+
+
+task.config C:\T32\demo\arm\kernel\ucos-ii\ucos.t32
+menu.REPROGRAM C:\T32\demo\arm\kernel\ucos-ii\ucos.men
+
+do win.cmm
+
+;go main
+
+
+
+
+
+
+
+enddo
+;)
+;---------------------------------------------------------------------------------
+; Burnning UMON to NAND
+;---------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

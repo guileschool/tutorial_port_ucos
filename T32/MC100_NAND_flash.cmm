@@ -1,0 +1,46 @@
+area
+
+
+d.s SD:0xE0200200 %LE %LONG 0x00000020		; MEM_SYS_CFG register
+
+//GPIO setting
+data.set SD:0xE03002A0 %long %le 0x22222322
+data.set SD:0xE03002E0 %long %le 0x22223333
+data.set SD:0xE03002E4 %long %le 0xff
+data.set SD:0xE03002E8 %long %le 0xff00
+
+//NFCONT setting
+data.set SD:0xE7200000 %long %le 0x01007770
+data.set SD:0xE7200004 %long %le 0x00000105
+//data.set SD:0xE7200068 %long %le 0x1
+
+NANDFLASH:
+FLASHFILE.RESet
+
+; FLASHFILE.Config <cmd_reg> <addr_reg> <io_reg>
+FLASHFILE.Config 0xE7200008 0xE720000c 0xE7200010
+
+; FLASHFILE.TARGET <code_range> <data_range> <file>
+FLASHFILE.TARGET 0x20000000++0x3FFF 0x20004000++0x3FFF ~~\demo\arm\flash\byte\nand1g08.bin
+
+
+;FLASHFILE.UNLOCK 0x90000000++0x7ffffff
+
+; erase 128 MByte (all) : 1block = 0x4000 byte 
+FLASHFILE.Erase 0x90000000++0x7ffffff
+
+; write file to NAND FLASH
+; uboot image fusing to NAND from 0x0
+;FLASHFILE.LOAD * 0x90000000++0xfff
+FLASHFILE.LOAD * 0x90000000++0x7fffff
+;FLASHFILE.LOAD Z:\home\jongin\uboot\nand_bl1\u-boot-nand-bl1.bin 0x90000000++0x4ffff
+
+;확인하기 위해서는 아래 명령을 사용해서 NAND Flash 내용을 덤프떠서 보세요.
+flashfile.save test.bin 0x90000000++0x3ffff
+
+
+
+
+
+
+

@@ -1,0 +1,25 @@
+// T32 Tue Jun 15 08:58:31 2010
+
+ B::
+ 
+ TOOLBAR ON
+ STATUSBAR ON
+ WINPAGE.RESET
+ 
+ WINCLEAR
+ WINPOS 0.0 43.417 94. 34. 0. 0. W004
+ fpu
+ 
+ WINPOS 97.857 43.5 80. 23. 5. 0. W003
+ Var.Frame /Locals /Caller
+ 
+ WINPOS 0.0 0.0 94. 38. 15. 1. W000
+ WINTABS 10. 10. 25. 62.
+ data.list
+ 
+ WINPOS 98.0 0.0 52. 40. 0. 0. W001
+ Register /SL
+ 
+ WINPAGE.SELECT P000     
+ 
+ ENDDO

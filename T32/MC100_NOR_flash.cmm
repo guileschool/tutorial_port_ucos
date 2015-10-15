@@ -1,0 +1,38 @@
+;---------------------------------------------------------------------------------
+; SMC Bank [n] Initialization                                              
+;---------------------------------------------------------------------------------
+;d.s SD:0xE7000000 %LE %LONG 0x3b 		; SMC_BW - 16bit Nor flash, disable nBE, disable WAIT, byte base address
+;d.s SD:0xE7000004 %LE %LONG 0x77777777		; SMC_BC0
+
+
+// MEM_SYS_CFG register
+d.s SD:0xE0200200 %LE %LONG 0x00000000 		; SROMC
+
+
+//GPIO setting
+data.set SD:0xE03002A0 %long %le 0x22222222
+data.set SD:0xE03002C0 %long %le 0x22222222
+
+flash.res
+;flash.create 0x00000000--0x0000FFFF 0x00002000 target word	;8kByte 8 sectors total 64kByte
+;flash.create 0x00010000--0x003FFFFF 0x00010000 target word	;64kByte 63 sectors 
+FLASH.Create 1. 0x80000000--0x800FFFFF 0x100000 TARGET word
+
+Flash.target 0x20000000 0x20001000 0x1000 ~~/demo/arm/flash/word/Am29lv100.bin	;target Memory config
+
+;FLASH.ERASE 0x80000000--0x800FFFFF			;특정섹터를 지울때 영역을 지정한다.
+FLASH.ERASE ALL		        	;when you want chip erase. 칩전체를 지운다.
+
+
+FLASH.PROGRAM ALL
+d.load.auto *.* 0x80000000 /word		;플래시할 파일을 지정하고 시작번지를 지정한다.
+
+
+
+print "Finish...."
+FLASH.PROGRAM OFF
+
+map.bonchip 0x80000000--0x801fffff
+
+
+

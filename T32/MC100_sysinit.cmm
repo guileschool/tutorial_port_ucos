@@ -1,0 +1,92 @@
+;---------------------------------------------------------------------------------
+; CLOCK Initialization                                              
+;---------------------------------------------------------------------------------
+; C100 Clock configuration : 533Mhz, 133Mhz, 133Mhz
+
+	d.s SD:0xe0100304 %LE %LONG 0x00010000        ;
+	d.s SD:0xe0100304 %LE %LONG 0x00011000        ;
+	d.s SD:0xe0100304 %LE %LONG 0x00011100        ;
+	d.s SD:0xe0100304 %LE %LONG 0x00011110        ;
+	d.s SD:0xe0100304 %LE %LONG 0x00011110        ;
+	d.s SD:0xe0100308 %LE %LONG 0x00000001        ;
+	d.s SD:0xe0100300 %LE %LONG 0x00011001        ;
+	d.s SD:0xe0100300 %LE %LONG 0x00011001        ;
+	d.s SD:0xe0100300 %LE %LONG 0x00011301        ;
+	d.s SD:0xe0100300 %LE %LONG 0x00011301        ;
+	
+	// SetLockTime & StartPLL
+	d.s SD:0xe0100000 %LE %LONG 0x00000e10        ;
+	d.s SD:0xe0100100 %LE %LONG 0x81bc0400        ;
+	wait 1000.us	
+	d.s SD:0xe0100004 %LE %LONG 0x00000e10        ;
+	d.s SD:0xe0100104 %LE %LONG 0x80590201        ;
+	wait 1000.us
+	d.s SD:0xe0100008 %LE %LONG 0x00000e10        ;
+	d.s SD:0xe0100108 %LE %LONG 0x80870303        ;
+	wait 1000.us	
+
+	d.s SD:0xe0100200 %LE %LONG 0x00000000        ;
+	d.s SD:0xe010000c %LE %LONG 0x00000e10        ;
+	d.s SD:0xe010010c %LE %LONG 0x80600603        ;
+	wait 1000.us
+	
+	// SetSourceClock		
+	d.s SD:0xe0100200 %LE %LONG 0x00000000        ;
+	d.s SD:0xe0100200 %LE %LONG 0x00000001        ;
+	d.s SD:0xe0100200 %LE %LONG 0x00000011        ;
+	d.s SD:0xe0100200 %LE %LONG 0x00000111        ;
+	d.s SD:0xe0100200 %LE %LONG 0x00001111        ;
+	d.s SD:0xe0100204 %LE %LONG 0x00000001        ;
+	d.s SD:0xe0100204 %LE %LONG 0x01000001        ;
+	d.s SD:0xe0100400 %LE %LONG 0x00009000        ;
+
+;---------------------------------------------------------------------------------
+; SMC Bank [n] Initialization                                              
+;---------------------------------------------------------------------------------
+
+	d.s SD:0xE7000000 %LE %LONG 0x3b 		; SMC_BW - 16bit Nor flash, disable nBE, disable WAIT, byte base address
+	d.s SD:0xE7000004 %LE %LONG 0xff1ffff0		; SMC_BC0
+	d.s SD:0xE7000008 %LE %LONG 0xff1ffff0		; SMC_BC1
+	d.s SD:0xE700000c %LE %LONG 0xff1ffff0		; SMC_BC2
+
+;---------------------------------------------------------------------------------
+; DRAM Initialization                                              
+;---------------------------------------------------------------------------------
+	d.s SD:0xE6000018 %LE %LONG  0x6A101000	;PhyControl0	DLL parameter setting
+	d.s SD:0xE600001C %LE %LONG  0x000084F4	;PhyControl1	DLL parameter setting
+	d.s SD:0xE6000020 %LE %LONG  0x00000000	;PhyControl2	DLL parameter setting
+	d.s SD:0xE6000018 %LE %LONG  0x6A101002	;PhyControl0	DLL on
+	d.s SD:0xE6000018 %LE %LONG  0x6A101003	;PhyControl0	DLL start
+	d.s SD:0xE6000018 %LE %LONG  0x6A101003	;PhyControl0	Force value locking for DLL off
+	d.s SD:0xE6000018 %LE %LONG  0x6A101009	;PhyControl0	DLL off
+
+
+	d.s SD:0xE6000000 %LE %LONG  0x0FF01010	;ConControl	auto refresh off
+	d.s SD:0xE6000004 %LE %LONG  0x00212400	;MemControl	BL%LE %LONG4, 2 chip, LPDDR, dynamic self refresh, force precharge, dynamic power down off
+	d.s SD:0xE6000008 %LE %LONG  0x20E01323	;MemConfig0	128MB config, 4banks
+	d.s SD:0xE600000C %LE %LONG  0x20E01323	;MemConfig1	
+	d.s SD:0xE6000014 %LE %LONG  0x20000000	;PrechConfig
+	d.s SD:0xE6000028 %LE %LONG  0x00100002	;PwrdnConfig			
+	d.s SD:0xE6000030 %LE %LONG  0x000006c3 ;TimingAref	7.8us*133MHz%LE %LONG1038(0x40E), 100MHz%LE %LONG780(0x30C), 20MHz%LE %LONG156(0x9C), 10MHz%LE %LONG78(0x4E)
+	d.s SD:0xE6000034 %LE %LONG  0x202332C8	;TimingRow	@133MHz
+	d.s SD:0xE6000038 %LE %LONG  0x24450304	;TimingData	CL%LE %LONG3
+	d.s SD:0xE600003C %LE %LONG  0x07c80232	;TimingPower	
+		
+	d.s SD:0xE6000010 %LE %LONG  0x07000000	;DirectCmd	chip0 Deselect
+	d.s SD:0xE6000010 %LE %LONG  0x01000000	;DirectCmd	chip0 PALL
+	d.s SD:0xE6000010 %LE %LONG  0x00020000	;DirectCmd	chip0 REFA
+	d.s SD:0xE6000010 %LE %LONG  0x00030000	;DirectCmd	chip0 REFA
+	d.s SD:0xE6000010 %LE %LONG  0x00010400	;DirectCmd	chip0 MRS, CL%LE %LONG3, BL%LE %LONG4
+	d.s SD:0xE6000010 %LE %LONG  0x00000532	;DirectCmd	chip1 Deselect
+	d.s SD:0xE6000010 %LE %LONG  0x01000000	;DirectCmd	chip1 PALL
+	d.s SD:0xE6000010 %LE %LONG  0x05000000	;DirectCmd	chip1 REFA
+	d.s SD:0xE6000010 %LE %LONG  0x05000000	;DirectCmd	chip1 REFA
+	d.s SD:0xE6000010 %LE %LONG  0x00000452	;DirectCmd	chip1 MRS, CL%LE %LONG3, BL%LE %LONG4
+	d.s SD:0xE6000010 %LE %LONG  0x00010780	;DirectCmd	chip1 MRS, CL%LE %LONG3, BL%LE %LONG4
+	d.s SD:0xE6000010 %LE %LONG  0x00010402	;DirectCmd	chip1 MRS, CL%LE %LONG3, BL%LE %LONG4
+
+	d.s SD:0xE6000000 %LE %LONG  0x00FF20B0	;ConControl	auto refresh on
+;	d.s SD:0xE6000028 %LE %LONG  0x00100002	;PwrdnConfig	
+	d.s SD:0xE6000004 %LE %LONG  0x00212413	;MemControl	BL%LE %LONG
+
+
