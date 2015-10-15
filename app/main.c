@@ -12,6 +12,7 @@
 **
 *******************************************************************************/
 #include <stdio.h>
+#include "uartdrv.h"
 
 void uart_putc(int data);
 //void Led_Display(int num);
@@ -23,6 +24,8 @@ int main(void)
 {
 //	Led_Display(15);
 	uart_putc('m');
+	Uart_Init(115200);
+	Uart_Printf("hello, world!\n");
 	for(;;);
 
 	return 0;    

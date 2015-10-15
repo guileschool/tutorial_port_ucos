@@ -27,14 +27,18 @@ CC			= $(TOOLDIR)/bin/$(TARGET)-gcc
 LD 			= $(TOOLDIR)/bin/$(TARGET)-ld
 OBJCOPY	 	= $(TOOLDIR)/bin/$(TARGET)-objcopy
 OBJDUMP 	= $(TOOLDIR)/bin/$(TARGET)-objdump	  
-      
+    
+BSPSRC 		=	$(BSPDIR)/uartdrv.c\
+						$(BSPDIR)/clkcon.c\
+						$(BSPDIR)/syscall.c
+
 BSPASRC 		=	$(BSPDIR)/common.S\
               $(BSPDIR)/cp15a.S\
               $(BSPDIR)/startup.S
 
 APPSRC 		= $(APPDIR)/main.c
 			
-OBJS       = $(BSPASRC:.S=.o)
+OBJS       = $(BSPSRC:.c=.o) $(BSPASRC:.S=.o)
 OBJS    	+= $(APPSRC:.c=.o)
 
 ####################################################
