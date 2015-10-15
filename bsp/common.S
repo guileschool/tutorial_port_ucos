@@ -9,6 +9,21 @@
 Led_Display:
 	/* IMPLEMENT HERE 
 	 */
+	/* GPIO Initialization */
+	ldr		r1, =GPJ4DAT
+	ldr		r2, =0xf
+
+	tst r0,#1
+	bicne r2,r2,#1
+	tst r0,#2
+	bicne r2,r2,#2
+	tst r0,#4
+	bicne r2,r2,#4
+	tst r0,#8
+	bicne r2,r2,#8
+
+	str		r2, [r1]
+
 	mov pc, lr
 
 
