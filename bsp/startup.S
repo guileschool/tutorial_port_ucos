@@ -11,15 +11,16 @@
 	.extern __RODATA_END__ 
 
 	.extern DispExitChar
-	.extern IRQHandler
+
 	.extern ClockForInit
 	.extern UART0_ASM_Init
 	.extern Led_Display
 	
   .extern OS_CPU_ARM_ExceptIrqHndlr
-  
+
 	.text
 
+	.global IRQHandler
 	.global _start
 	
 _start:
@@ -31,14 +32,15 @@ start:
 	.extern Pabort_Handler
 	.extern SWI_Handler
 	.extern Undef_Handler
-
+	.extern OS_CPU_ARM_ExceptIrqHndlr
+	
 ResetEntry:		B       ResetHandler
 UndefEntry:		B       Undef_Handler					@@UndefHandler
 SwiEntry:			B       SWI_Handler						@@SWIHandler
 IAbortEntry:	B       Pabort_Handler				@@PAbortHandler
 DAbortEntry:	B       Dabort_Handler				@@DAbortHandler
         			B       .
-IrqEntry:     B       IRQHandler
+IrqEntry:     B       OS_CPU_ARM_ExceptIrqHndlr		@@IRQHandler
 FiqEntry:			B       FIQHandler
 
 	/* Reset Handler */

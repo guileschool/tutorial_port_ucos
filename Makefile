@@ -20,6 +20,7 @@ OUTDIR      = ucos2_data
 OBJDIR      = $(OUTDIR)/ObjectCode
 APPDIR      = app
 BSPDIR      = bsp
+KERDIR			= kernel
 INCDIR      = include
 
 AS			= $(TOOLDIR)/bin/$(TARGET)-as
@@ -33,23 +34,38 @@ BSPSRC 		=	$(BSPDIR)/uartdrv.c\
 						$(BSPDIR)/syscall.c\
 						$(BSPDIR)/timer.c\
 						$(BSPDIR)/libc.c\
-						$(BSPDIR)/Exception.c
+						$(BSPDIR)/Exception.c\
+						$(BSPDIR)/os_dbg.c\
+						$(BSPDIR)/os_cpu_c.c
 
 BSPASRC 		=	$(BSPDIR)/common.S\
               $(BSPDIR)/cp15a.S\
-              $(BSPDIR)/startup.S
+              $(BSPDIR)/startup.S\
+              $(BSPDIR)/os_cpu_a.S
+
+KERSRC		= $(KERDIR)/os_core.c\
+						$(KERDIR)/os_flag.c\
+						$(KERDIR)/os_mbox.c\
+						$(KERDIR)/os_mem.c\
+						$(KERDIR)/os_mutex.c\
+						$(KERDIR)/os_q.c\
+						$(KERDIR)/os_sem.c\
+						$(KERDIR)/os_task.c\
+						$(KERDIR)/os_time.c\
+						$(KERDIR)/os_tmr.c
 
 APPSRC 		= $(APPDIR)/main.c
 			
 OBJS       = $(BSPSRC:.c=.o) $(BSPASRC:.S=.o)
 OBJS    	+= $(APPSRC:.c=.o)
+OBJS    	+= $(KERSRC:.c=.o)
 
 ####################################################
 ####             Option Definition              ####
 ####################################################
-INCLUDE	= -nostdinc  -I. -I$(BSPDIR) -I$(INCDIR) -I$(LIBGCCDIR)/include -I$(TOOLDIR)/$(TARGET)/include 
+INCLUDE	= -nostdinc  -I. -I$(KERDIR) -I$(BSPDIR) -I$(INCDIR) -I$(LIBGCCDIR)/include -I$(TOOLDIR)/$(TARGET)/include 
 
-CFLAGS	= 	$(INCLUDE) -g -Wall -Wstrict-prototypes -Wno-trigraphs -O0
+CFLAGS	= 	-D__LITTLE_ENDIAN__ $(INCLUDE) -g -Wall -Wstrict-prototypes -Wno-trigraphs -O0
 CFLAGS	+= 	-fno-strict-aliasing -fno-common -Wno-parentheses -Wno-unused-parameter -Wno-implicit-function-declaration
 CFLAGS	+= 	-Wno-unused-function -Wno-old-style-declaration
 CFLAGS	+= 	-mcpu=cortex-a8 -fno-builtin
@@ -77,10 +93,11 @@ $(OUTDIR)/$(MC100TEST).bin : $(OBJS)
 clean:
 	rm -f $(APPDIR)/*.o $(APPDIR)/*/*.o 
 	rm -f $(BSPDIR)/*.o $(BSPDIR)/drv/*.o 
+	rm -f $(KERDIR)/*.o
 	rm -f $(OUTDIR)/$(MC100TEST)*
 
 dep:
-	$(CC) -M $(INCLUDE) $(BSPSRC) $(APPSRC) > .depend
+	$(CC) -M $(INCLUDE) $(KERSRC) $(BSPSRC) $(APPSRC) > .depend
 
 ifeq (.depend,$(wildcard .depend))
 include .depend

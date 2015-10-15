@@ -171,9 +171,11 @@ void InitSystem(void)
 	StartTimeTick();
 
 // interrupt enable
+#if 1
 	asm volatile("mrs r12, cpsr\n"
     "bic r12, r12, #0xC0\n"
     "msr cpsr_c, r12");
+#endif
 }
 
 void Led_Display(int data)
@@ -289,7 +291,8 @@ void OSTickISR(void)
 {
 //	Uart_PutChar('c');
 //  Led_Display(tick);
-	tick++;
+//	tick++;
+  OSTimeTick();   // kernel timer handler
   rTINT_CSTAT |=(1<<9);
   rVIC0ADDRESS =0;
 }
